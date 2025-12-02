@@ -6,7 +6,11 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError
 from dotenv import load_dotenv
 import os
+<<<<<<< HEAD
 from .database import SessionLocal
+=======
+from api.database import SessionLocal
+>>>>>>> 06f716055b3c6dd1cc385fbd15a6aa910770b7e9
 
 load_dotenv()
 
@@ -38,6 +42,10 @@ async def get_current_user(token: oauth2_bearer_dependency):
         return {'username': username, 'id': user_id}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 06f716055b3c6dd1cc385fbd15a6aa910770b7e9
 
 user_dependency = Annotated[dict, Depends(get_current_user)]

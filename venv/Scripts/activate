@@ -38,7 +38,11 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
+<<<<<<< HEAD
 VIRTUAL_ENV="C:\Users\amine\OneDrive\Bureau\fastapi-nextjs\Workout\venv"
+=======
+VIRTUAL_ENV="C:\Users\amine\OneDrive\Bureau\Python\Location_voiture\venv"
+>>>>>>> 06f716055b3c6dd1cc385fbd15a6aa910770b7e9
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

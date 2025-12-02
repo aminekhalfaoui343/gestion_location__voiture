@@ -8,7 +8,11 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
+<<<<<<< HEAD
 set VIRTUAL_ENV=C:\Users\amine\OneDrive\Bureau\fastapi-nextjs\Workout\venv
+=======
+set VIRTUAL_ENV=C:\Users\amine\OneDrive\Bureau\Python\Location_voiture\venv
+>>>>>>> 06f716055b3c6dd1cc385fbd15a6aa910770b7e9
 
 if not defined PROMPT set PROMPT=$P$G
 
