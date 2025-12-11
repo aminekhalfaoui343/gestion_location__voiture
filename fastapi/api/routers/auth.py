@@ -6,12 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from dotenv import load_dotenv
 import os
-<<<<<<< HEAD
 
-from api.models import Admin
-=======
-from api.models import User
->>>>>>> 06f716055b3c6dd1cc385fbd15a6aa910770b7e9
+from api.models import Admin, Renter
 from api.deps import db_dependency, bcrypt_context
 
 load_dotenv()
@@ -24,45 +20,67 @@ router = APIRouter(
 SECRET_KEY = os.getenv("AUTH_SECRET_KEY")
 ALGORITHM = os.getenv("AUTH_ALGORITHM")
 
-<<<<<<< HEAD
-
-# ----------- SCHEMAS ------------
+# ============================
+#           SCHEMAS
+# ============================
 
 class AdminCreateRequest(BaseModel):
     username: str
     password: str
 
+class UserCreateRequest(BaseModel):
+    username: str
+    password: str
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 
-# ----------- FUNCTIONS ------------
+# ============================
+#        AUTH FUNCTIONS
+# ============================
+
+def create_access_token(username: str, user_id: int, expires_delta: timedelta):
+    payload = {
+        "sub": username,
+        "id": user_id,
+        "exp": datetime.now(timezone.utc) + expires_delta
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+# -------- ADMIN AUTH --------
 
 def authenticate_admin(username: str, password: str, db):
     admin = db.query(Admin).filter(Admin.username == username).first()
 
     if not admin:
         return False
-    
+
     if not bcrypt_context.verify(password, admin.hashed_password):
         return False
-    
+
     return admin
 
 
-def create_access_token(username: str, admin_id: int, expires_delta: timedelta):
-    payload = {
-        'sub': username,
-        'id': admin_id
-    }
-    expires = datetime.now(timezone.utc) + expires_delta
-    payload.update({'exp': expires})
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+# -------- USER AUTH --------
+
+def authenticate_user(username: str, password: str, db):
+    user = db.query(User).filter(User.username == username).first()
+
+    if not user:
+        return False
+    
+    if not bcrypt_context.verify(password, user.hashed_password):
+        return False
+    
+    return user
 
 
-# ----------- ROUTES ------------
+# ============================
+#        ROUTES ADMIN
+# ============================
 
 @router.post("/admin", status_code=status.HTTP_201_CREATED)
 async def create_admin(db: db_dependency, create_admin_request: AdminCreateRequest):
@@ -97,48 +115,44 @@ async def admin_login(
         timedelta(minutes=30)
     )
 
-    return {'access_token': token, 'token_type': 'bearer'}
-=======
-class UserCreateRequest(BaseModel):
-    username: str
-    password: str
-    
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    
-    
-def authenticate_user(username: str, password: str, db):
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
-        return False
-    if not bcrypt_context.verify(password, user.hashed_password):
-        return False
-    return user
+    return {"access_token": token, "token_type": "bearer"}
 
-def create_access_token(username: str, user_id: int, expires_delta: timedelta):
-    encode = {'sub': username, 'id': user_id}
-    expires = datetime.now(timezone.utc) + expires_delta
-    encode.update({'exp': expires})
-    return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+
+# ============================
+#        ROUTES USER
+# ============================
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user_request: UserCreateRequest):
-    create_user_model = User(
+
+    new_user = User(
         username=create_user_request.username,
         hashed_password=bcrypt_context.hash(create_user_request.password)
     )
-    db.add(create_user_model)
+
+    db.add(new_user)
     db.commit()
-    
+
+    return {"message": "User created successfully ✅"}
+
+
 @router.post('/token', response_model=Token)
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-                                 db: db_dependency):
+async def login_user(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: db_dependency
+):
     user = authenticate_user(form_data.username, form_data.password, db)
+
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
-    token = create_access_token(user.username, user.id, timedelta(minutes=20))
-    
-    return {'access_token': token, 'token_type': 'bearer'}
-    
->>>>>>> 06f716055b3c6dd1cc385fbd15a6aa910770b7e9
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user credentials"
+        )
+
+    token = create_access_token(
+        user.username,
+        user.id,
+        timedelta(minutes=20)
+    )
+
+    return {"access_token": token, "token_type": "bearer"}
