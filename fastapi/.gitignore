@@ -1,4 +1,4 @@
-# Python cache
+# Python cache files
 __pycache__/
 *.pyc
 
@@ -11,3 +11,4 @@ venv/
 
 # Databases
 *.db
+*.sqlite3
