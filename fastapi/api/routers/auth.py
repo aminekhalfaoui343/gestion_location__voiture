@@ -28,7 +28,7 @@ class AdminCreateRequest(BaseModel):
     username: str
     password: str
 
-class UserCreateRequest(BaseModel):
+class RenterCreateRequest(BaseModel):
     username: str
     password: str
 
@@ -66,16 +66,16 @@ def authenticate_admin(username: str, password: str, db):
 
 # -------- USER AUTH --------
 
-def authenticate_user(username: str, password: str, db):
-    user = db.query(User).filter(User.username == username).first()
+def authenticate_renter(username: str, password: str, db):
+    renter = db.query(Renter).filter(Renter.username == username).first()
 
-    if not user:
+    if not renter:
         return False
-    
-    if not bcrypt_context.verify(password, user.hashed_password):
+
+    if not bcrypt_context.verify(password, renter.hashed_password):
         return False
-    
-    return user
+
+    return renter
 
 
 # ============================
@@ -93,7 +93,7 @@ async def create_admin(db: db_dependency, create_admin_request: AdminCreateReque
     db.add(new_admin)
     db.commit()
 
-    return {"message": "Admin created successfully ✅"}
+    return {"message": "Admin created successfully"}
 
 
 @router.post('/admin/token', response_model=Token)
@@ -119,39 +119,39 @@ async def admin_login(
 
 
 # ============================
-#        ROUTES USER
+#        ROUTES RENTER
 # ============================
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_user(db: db_dependency, create_user_request: UserCreateRequest):
+async def create_renter(db: db_dependency, create_renter_request: RenterCreateRequest):
 
-    new_user = User(
-        username=create_user_request.username,
-        hashed_password=bcrypt_context.hash(create_user_request.password)
+    new_renter = Renter(
+        username=create_renter_request.username,
+        hashed_password=bcrypt_context.hash(create_renter_request.password)
     )
 
-    db.add(new_user)
+    db.add(new_renter)
     db.commit()
 
-    return {"message": "User created successfully ✅"}
+    return {"message": "Renter created successfully"}
 
 
 @router.post('/token', response_model=Token)
-async def login_user(
+async def login_renter(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: db_dependency
 ):
-    user = authenticate_user(form_data.username, form_data.password, db)
+    renter = authenticate_renter(form_data.username, form_data.password, db)
 
-    if not user:
+    if not renter:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid user credentials"
         )
 
     token = create_access_token(
-        user.username,
-        user.id,
+        renter.username,
+        renter.id,
         timedelta(minutes=20)
     )
 
